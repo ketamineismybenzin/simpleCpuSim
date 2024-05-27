@@ -8,10 +8,17 @@ it also has an mmu and interupts.
 
 TODO:
 add instructions.
-add interupts and mmu interupts
-add stack functions (push, pop)
+
+add interupts and mmu interupts.
+
+add stack functions (push, pop).
+
 add some form of simulated hard storage using binairy files, disk images or floppy disks.
-add IO (keyboard, TTY, networking, vga graphics)
+
+add IO (keyboard, TTY, networking, vga graphics).
+
+Curently being worked on:
+simulated flash memory for hard storage.
 
 BUGS:
-random segfault that is caused by non deterministic source in EXECUTE function
+random segfault that is caused by non deterministic source in EXECUTE function.

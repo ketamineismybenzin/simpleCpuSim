@@ -10,21 +10,31 @@ using Word = unsigned short;
 using u32 = unsigned int;
 
 struct MEM { //this holds the ram memory
-    Word ram[W_SIZE];
+    Word Ram[W_SIZE];
     void Initialize() {//initializes array with 0's
         for (u32 i = 0; i<W_SIZE; i++) {
-            ram[i] = 0;
+            Ram[i] = 0;
         }
-        ram[0] = 0x00FF;//initialize reset vector
+        Ram[0] = 0x00FF;//initialize reset vector
     }
     void Load(Word *data, u32 size, u32 adres) {//load some data into the memory
         for (u32 i = 0; i<size+adres; i++) {
-            ram[i+adres] = data[i];
+            Ram[i+adres] = data[i];
         }
+    }
+    void LoadFile() {
+        std::ifstream infile("Bios.bin");
+        infile.seekg(0, std::ios::end);
+        size_t length = infile.tellg();
+        infile.seekg(0, std::ios::beg);
+        if (length > sizeof(Ram)) {
+            length = sizeof(Ram);
+        }
+        infile.read((char *) Ram, length);
     }
     void Dump(u32 start, u32 end) {//show a portion of the ram
         for (u32 i = start; i<end; i++) {
-            printf("\n%d", ram[i]);
+            std::cout << "\n" << Ram[i];
         }
     }
 };
@@ -52,9 +62,9 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                 //mmu segfault interupt
                 return 0;
             }
-            return memory.ram[hardadres];
+            return memory.Ram[hardadres];
         } else {
-            return memory.ram[adres];
+            return memory.Ram[adres];
         }
     }
     void Write(MEM& memory, Word adres, Word data) {//write a word to ram
@@ -64,9 +74,9 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                 //mmu segfault interupt
                 return;
             }
-            memory.ram[hardadres] = data;
+            memory.Ram[hardadres] = data;
         } else {
-            memory.ram[adres] = data;
+            memory.Ram[adres] = data;
         }
     }
     Word ReadIO(Byte adres) {//read a word from the IO bus
@@ -100,7 +110,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
     }
     void Reset(MEM& memory) {
         memory.Initialize();//reset memory
-        PC = memory.ram[0];//set PC with reset vector
+        PC = memory.Ram[0];//set PC with reset vector
     }
     void Execute(MEM& memory) {//execute single instruction
         Word val;//val is used as temporary storage of data
@@ -168,7 +178,31 @@ struct FLASH {
         if (length > sizeof(Flash)) {
             length = sizeof(Flash);
         }
-        infile.read((char *)Flash, length);
+        infile.read((char *) Flash, length);
+    }
+    void Dump(u32 start, u32 end) {
+        if ((start > sizeof(Flash)) | (end > sizeof(Flash))) {
+            return;
+        }
+        for (u32 i = start; i < end; i++) {
+            std::cout << (Word) Flash[i] << ", ";
+        }
+    }
+    void DumpFile() {
+        std::ofstream outfile("Flash.bin", std::ios::binary);
+        outfile.write((char *) Flash, sizeof(Flash));
+    }
+    Word Read(Word adres) {
+        if (adres > sizeof(Flash)) {//check for adres larger then the size of Flash
+            return 0;
+        }
+        return Flash[adres];
+    }
+    void Write(Word adres, Byte value) {
+        if (adres > sizeof(Flash)) {
+            return;
+        }
+        Flash[adres] = value;
     }
 };
 
@@ -177,6 +211,10 @@ int main() {
     CPU cpu;
     MEM mem;
     FLASH flashmem;
+    flashmem.Load();
+    flashmem.Dump(0, 20);
+    flashmem.Write(5, 65);
+    flashmem.DumpFile();
     cpu.Reset(mem);
     mem.Load(program, 3, 0x00FF);
     cpu.Execute(mem);
