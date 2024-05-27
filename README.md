@@ -13,12 +13,13 @@ add interupts and mmu interupts.
 
 add stack functions (push, pop).
 
-add some form of simulated hard storage using binairy files, disk images or floppy disks.
+add some form of simulated hard storage using binairy files, disk images or floppy disks. - Done
 
 add IO (keyboard, TTY, networking, vga graphics).
 
 Curently being worked on:
-simulated flash memory for hard storage.
+instructions and interputs
 
 BUGS:
-random segfault that is caused by non deterministic source in EXECUTE function.
+random segfault that is caused by non deterministic source in EXECUTE function. - fixed
+
