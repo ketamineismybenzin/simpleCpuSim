@@ -26,7 +26,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         return 0;
     }
     void SetReg(Word reg, Word value) {
-        if (2*reg < sizeof(Regs)) {
+        if ((2*reg < sizeof(Regs)) & ~GetFlag(4)) {
             Regs[reg] = value;
         }
     }
@@ -83,13 +83,19 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
             }
         }
     }
-    void Initialize() {
+    void Initialize() {//initializes all the arrays
         memory.Initialize();
         memory.LoadBIOS();
         flashmem.LoadFlash();
     }
     void Reset() {
         PC = memory.Ram[0];//set PC with reset vector
+		SP[0] = 0;
+		SP[1] = 0;
+		Regs[0] = 0;
+		Regs[1] = 0;
+		Regs[2] = 0;
+		Regs[3] = 0;
     }
     void Execute() {//execute single instruction
         Word val;//val is used as temporary storage of data
@@ -97,10 +103,89 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         Word op1 = Read(PC+1);
         Word op2 = Read(PC+2);
         switch(IR) {
-            case 0:
-                Regs[op1] = op2;
+            case 0://mov reg[op1] = op2
+                SetReg(op1, op2);
                 PC+=3;
                 break;
+			case 1://mov reg[op1] = reg[op2]
+                SetReg(op1, GetReg(op2));
+                PC+=3;
+                break;
+			case 2://mov reg[op1] = rd(op2)
+                SetReg(op1, Read(op2));
+                PC+=3;
+                break;
+			case 3://mov reg[op1] = rd(reg[op2])
+                SetReg(op1, Read(GetReg(op2)));
+                PC+=3;
+                break;
+			case 4://mov reg[op1] = rd(rd(op2))
+                SetReg(op1, Read(Read(op2)));//get the value of a pointer
+                PC+=3;
+                break;
+			case 5://mov wr(op2, reg[op1])
+                Write(op2, GetReg(op1));
+                PC+=3;
+                break;
+			case 6://mov wr(reg[op2], reg[op1])
+                Write(GetReg(op2), GetReg(op1));
+                PC+=3;
+                break;
+			case 7://mov wr(rd(op2), reg[op1])
+			    Write(Read(op2), GetReg(op1));//write to a pointer
+				PC+=3;
+				break;
+			case 8://inc reg[op1] += 1
+			    SetReg(op1, GetReg(op1)+1);
+			    PC+=2;
+				break;
+			case 9://dec reg[op1] -= 1
+			    SetReg(op1, GetReg(op1)-1);
+			    PC+=2;
+				break;
+			case 10://add reg[op1] = reg[op1] + reg[op2]
+			    SetReg(op1, GetReg(op1) + GetReg(op2));
+			    PC+=3;
+				break;
+			case 11://add reg[op1] = reg[op1] + rd(op2)
+			    SetReg(op1, GetReg(op1) + Read(op2));
+			    PC+=3;
+				break;
+			case 12://add reg[op1] = reg[op1] + rd(reg[op2])
+			    SetReg(op1, GetReg(op1) + Read(GetReg(op2)));
+			    PC+=3;
+				break;
+			case 13://sub reg[op1] = reg[op1] - reg[op2]
+			    SetReg(op1, GetReg(op1) - GetReg(op2));
+			    PC+=3;
+				break;
+			case 14://sub reg[op1] = reg[op1] - rd(op2)
+			    SetReg(op1, GetReg(op1) + Read(op2));
+			    PC+=3;
+				break;
+			case 15://sub reg[op1] = reg[op1] - rd(reg[op2])
+			    SetReg(op1, GetReg(op1) - Read(GetReg(op2)));
+			    PC+=3;
+				break;
+			case 16://mul reg[op1] = reg[op1] * reg[op2]
+			    SetReg(op1, GetReg(op1) * GetReg(op2));
+			    PC+=3;
+				break;
+			case 17://mul reg[op1] = reg[op1] * rd(op2)
+			    SetReg(op1, GetReg(op1) * Read(op2));
+			    PC+=3;
+				break;
+			case 18://div reg[op1] = reg[op1] / reg[op2]
+		        SetReg(op1, GetReg(op1) / GetReg(op2));
+			    PC+=3;
+				break;
+			case 19://div reg[op1] = reg[op1] / rd(op2)
+			    SetReg(op1, GetReg(op1) / Read(op2));
+			    PC+=3;
+				break;
+			case 20://jmp op1			    
+			    PC=op1;
+				break;
             default:
                 PC+=1;
         }
@@ -110,20 +195,25 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         std::cout << "\nusp:" << SP[0];
         std::cout << "\nksp:" << SP[1];
         std::cout << "\nA:" << Regs[0];
+		std::cout << "\nB:" << Regs[1];
+		std::cout << "\nC:" << Regs[2];
+		std::cout << "\nD:" << Regs[3];
     }
 };
 
 int main() {
-    Word program[] = {0, 0, 1};
     CPU cpu;
-    cpu.Initialize();
-    cpu.Reset();
+	Word testprogram[] = {0, 0, 1, 0, 1, 4, 10, 0, 1};
+    cpu.Initialize();//initialize the computer
+    cpu.Reset();//reset the cpu
+	cpu.memory.Load(testprogram, sizeof(testprogram)/2, 0x00FF);
+    cpu.Execute();
     cpu.Execute();
     cpu.Status();//show cpu status
     std::cout << "\nramdump:\n";
     cpu.memory.Dump(255, 266);//dump 11 bytes of ram from location 0xff
     std::cout << "\nflashdump:\n";
-    cpu.flashmem.Dump(0, 10);
-    cpu.flashmem.DumpFlash();
+    cpu.flashmem.Dump(0, 10);//dump 10 bytes of flash memory from location 0
+    cpu.flashmem.DumpFlash();//dump the flash memory into the Flash.bin file
     return 0;
 }

@@ -36,7 +36,7 @@ struct MEM { //this holds the ram memory
             length = sizeof(filebuffer.Bytes);
         }
         infile.read((char *) filebuffer.Bytes, length);
-        Load(filebuffer.Words, sizeof(filebuffer.Words), 0x00FF);
+        Load(filebuffer.Words, sizeof(filebuffer.Words)/2, 0x00FF);//we need to divide sizeof by 2 because 1 word is 2 bytes
     }
     void Dump(u32 start, u32 end) {//show a portion of the ram
         for (u32 i = start; i<end; i++) {
