@@ -7,6 +7,11 @@ adres bus & data bus are 16 bit.
 it also has an mmu and interupts.
 
 TODO:
--add instructions.
--add some form of simulated hard storage using binairy files, disk images or floppy disks.
--add IO (keyboard, TTY, networking, vga graphics)
+add instructions.
+add interupts and mmu interupts
+add stack functions (push, pop)
+add some form of simulated hard storage using binairy files, disk images or floppy disks.
+add IO (keyboard, TTY, networking, vga graphics)
+
+BUGS:
+random segfault that is caused by non deterministic source in EXECUTE function

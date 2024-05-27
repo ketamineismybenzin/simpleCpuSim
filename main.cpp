@@ -1,6 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
 #include <cmath>
+#include <fstream>
+#include <string>
 
 #define W_SIZE 65536
 
@@ -8,27 +9,27 @@ using Byte = unsigned char;
 using Word = unsigned short;
 using u32 = unsigned int;
 
-struct MEM {
+struct MEM { //this holds the ram memory
     Word ram[W_SIZE];
-    void Initialize() {
+    void Initialize() {//initializes array with 0's
         for (u32 i = 0; i<W_SIZE; i++) {
             ram[i] = 0;
         }
-        ram[0] = 0x00FF;
+        ram[0] = 0x00FF;//initialize reset vector
     }
-    void Load(Word *data, u32 size, u32 adres) {
+    void Load(Word *data, u32 size, u32 adres) {//load some data into the memory
         for (u32 i = 0; i<size+adres; i++) {
             ram[i+adres] = data[i];
         }
     }
-    void Dump(u32 start, u32 end) {
+    void Dump(u32 start, u32 end) {//show a portion of the ram
         for (u32 i = start; i<end; i++) {
             printf("\n%d", ram[i]);
         }
     }
 };
 
-struct CPU {
+struct CPU {//contains the cpu registers and functions to execute code from the memory
     Word PC;
     Word SP[2]; //stack pointers KSP and USP
     Word Regs[4]; //user registers A, B, C and D
@@ -44,10 +45,10 @@ struct CPU {
     void ClearFlag(Byte flag) {//clear a flag in the flag register
         Flags = Flags & ~((Byte) pow(2, (double) flag));//or the register with a bitmask
     }
-    Word Read(MEM& memory, Word adres) {
+    Word Read(MEM& memory, Word adres) {//read a word from ram
         if (GetFlag(3)) {//check if the mmu is active
             Word hardadres = adres + MMUOffset;
-            if ((hardadres > MMUMax) | (hardadres < MMUOffset)) {
+            if (adres > MMUMax) {//if the adres is too high we segfault
                 //mmu segfault interupt
                 return 0;
             }
@@ -56,10 +57,10 @@ struct CPU {
             return memory.ram[adres];
         }
     }
-    void Write(MEM& memory, Word adres, Word data) {
-        if (GetFlag(3)) {
+    void Write(MEM& memory, Word adres, Word data) {//write a word to ram
+        if (GetFlag(3)) {//check if the mmu is active i.e when the usermode flag is set to 1
             Word hardadres = adres + MMUOffset;
-            if ((hardadres > MMUMax) | (hardadres < MMUOffset)) {
+            if (adres > MMUMax) {//if the adres is too high we segfault
                 //mmu segfault interupt
                 return;
             }
@@ -68,8 +69,8 @@ struct CPU {
             memory.ram[adres] = data;
         }
     }
-    Word ReadIO(Byte adres) {
-        if (~GetFlag(3)) {
+    Word ReadIO(Byte adres) {//read a word from the IO bus
+        if (~GetFlag(3)) {//check if the cpu is in kernel mode i.e when the usermode flag is set to 0
             switch(adres) {
                 case 0:
                     return MMUOffset;
@@ -83,8 +84,8 @@ struct CPU {
         }
         return 0;
     }
-    void WriteIO(Byte adres, Word data) {
-        if (~GetFlag(3)) {
+    void WriteIO(Byte adres, Word data) {//write a word to the IO bus
+        if (~GetFlag(3)) {//check if the cpu is in kernel mode
             switch(adres) {
                 case 0:
                     MMUOffset = data;
@@ -99,11 +100,11 @@ struct CPU {
     }
     void Reset(MEM& memory) {
         memory.Initialize();//reset memory
-        PC = memory.ram[0];
+        PC = memory.ram[0];//set PC with reset vector
     }
-    void Execute(MEM& memory) {
-        Word val;
-        Word IR = Read(memory, PC);
+    void Execute(MEM& memory) {//execute single instruction
+        Word val;//val is used as temporary storage of data
+        Word IR = Read(memory, PC);//IR = Instruction Register it holds the curretn instruction
         Word op1 = Read(memory, PC+1);
         Word op2 = Read(memory, PC+2);
         switch(IR) {
@@ -150,10 +151,24 @@ struct CPU {
         }
     }
     void Status() {
-        printf("\npc:%d", PC);
-        printf("\nusp:%d", SP[0]);
-        printf("\nksp:%d", SP[1]);
-        printf("\nA:%d", Regs[0]);
+        std::cout << "\npc:" << PC;
+        std::cout << "\nusp:" << SP[0];
+        std::cout << "\nksp:" << SP[1];
+        std::cout << "\nA:" << Regs[0];
+    }
+};
+
+struct FLASH {
+    Byte Flash[1024];
+    void Load() {
+        std::ifstream infile("Flash.bin");
+        infile.seekg(0, std::ios::end);
+        size_t length = infile.tellg();
+        infile.seekg(0, std::ios::beg);
+        if (length > sizeof(Flash)) {
+            length = sizeof(Flash);
+        }
+        infile.read((char *)Flash, length);
     }
 };
 
@@ -161,10 +176,11 @@ int main() {
     Word program[] = {0, 0, 1};
     CPU cpu;
     MEM mem;
+    FLASH flashmem;
     cpu.Reset(mem);
     mem.Load(program, 3, 0x00FF);
     cpu.Execute(mem);
     cpu.Status();
-    mem.Dump(0, 10);
+    mem.Dump(255, 266);
     return 0;
 }
