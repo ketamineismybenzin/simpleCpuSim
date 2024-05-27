@@ -21,11 +21,11 @@ struct MEM {
             ram[i+adres] = data[i];
         }
     }
-	void Dump(u32 start, u32 end) {
-		for (u32 i = start; i<end; i++) {
-			printf("\n%d", ram[i]);
-		}
-	}
+    void Dump(u32 start, u32 end) {
+        for (u32 i = start; i<end; i++) {
+            printf("\n%d", ram[i]);
+        }
+    }
 };
 
 struct CPU {
@@ -98,11 +98,11 @@ struct CPU {
         }
     }
     void Reset(MEM& memory) {
-        memory.Initialize();
+        memory.Initialize();//reset memory
         PC = memory.ram[0];
     }
     void Execute(MEM& memory) {
-		Word val;
+        Word val;
         Word IR = Read(memory, PC);
         Word op1 = Read(memory, PC+1);
         Word op2 = Read(memory, PC+2);
@@ -115,34 +115,34 @@ struct CPU {
                 Regs[op1] = Regs[op2];
                 PC+=3;
                 break;
-		    case 2:
+            case 2:
                 val = Read(memory, op2);
-				if (~GetFlag(4)) {
-					Regs[op1] = val;
-				}
+                if (~GetFlag(4)) {
+                    Regs[op1] = val;
+                }
                 PC+=3;
                 break;
-	        case 3:
+            case 3:
                 val = Read(memory, Regs[op2]);
-				if (~GetFlag(4)) {
-					Regs[op1] = val;
-				}
+                if (~GetFlag(4)) {
+                    Regs[op1] = val;
+                }
                 PC+=3;
                 break;
-		    case 4:
+            case 4:
                 Write(memory, op1, Regs[op2]);
                 PC+=3;
                 break;
-			case 5:
+            case 5:
                 Write(memory, Regs[op1], Regs[op2]);
                 PC+=3;
                 break;
-			case 6:
+            case 6:
                 val = Read(memory, op2);
-				val = Read(memory, val);
-				if (~GetFlag(4)) {
-					Regs[op1] = val;
-				}
+                val = Read(memory, val);
+                if (~GetFlag(4)) {
+                    Regs[op1] = val;
+                }
                 PC+=3;
                 break;
             default:
@@ -158,13 +158,13 @@ struct CPU {
 };
 
 int main() {
-	Word program[] = {0, 0, 1};
+    Word program[] = {0, 0, 1};
     CPU cpu;
     MEM mem;
     cpu.Reset(mem);
-	mem.Load(program, 3, 0x00FF);
+    mem.Load(program, 3, 0x00FF);
     cpu.Execute(mem);
     cpu.Status();
-	mem.Dump(0, 10);
+    mem.Dump(0, 10);
     return 0;
 }
