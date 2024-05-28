@@ -33,3 +33,4 @@ notes:
 
 Flash.bin holds the non volatile memory and is loaded into Flash memory at initialization.
 Bios.bin holds the bios wich is loaded to 0x00FF at cpu initialization.
+this is not a cross platform project, it will only work on windows and i have only tested it on windows 11.
