@@ -30,6 +30,18 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
             Regs[reg] = value;
         }
     }
+    Word ParseFlags(Word input) {//sets the flags based on the input of the function
+        if (input==0) {
+            SetFlag(2);
+        }
+        if (input>=127) {
+            SetFlag(1);
+        }
+        if (input>0 & input < 127) {
+            SetFlag(0);
+        }
+        return input;
+    }
     Word Read(Word adres) {//read a word from ram
         if (GetFlag(3)) {//check if the mmu is active
             Word hardadres = adres + MMUOffset;
@@ -90,12 +102,12 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
     }
     void Reset() {
         PC = memory.Ram[0];//set PC with reset vector
-		SP[0] = 0;
-		SP[1] = 0;
-		Regs[0] = 0;
-		Regs[1] = 0;
-		Regs[2] = 0;
-		Regs[3] = 0;
+        SP[0] = 0;
+        SP[1] = 0;
+        Regs[0] = 0;
+        Regs[1] = 0;
+        Regs[2] = 0;
+        Regs[3] = 0;
     }
     void Execute() {//execute single instruction
         Word val;//val is used as temporary storage of data
@@ -107,85 +119,85 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                 SetReg(op1, op2);
                 PC+=3;
                 break;
-			case 1://mov reg[op1] = reg[op2]
+            case 1://mov reg[op1] = reg[op2]
                 SetReg(op1, GetReg(op2));
                 PC+=3;
                 break;
-			case 2://mov reg[op1] = rd(op2)
+            case 2://mov reg[op1] = rd(op2)
                 SetReg(op1, Read(op2));
                 PC+=3;
                 break;
-			case 3://mov reg[op1] = rd(reg[op2])
+            case 3://mov reg[op1] = rd(reg[op2])
                 SetReg(op1, Read(GetReg(op2)));
                 PC+=3;
                 break;
-			case 4://mov reg[op1] = rd(rd(op2))
+            case 4://mov reg[op1] = rd(rd(op2))
                 SetReg(op1, Read(Read(op2)));//get the value of a pointer
                 PC+=3;
                 break;
-			case 5://mov wr(op2, reg[op1])
+            case 5://mov wr(op2, reg[op1])
                 Write(op2, GetReg(op1));
                 PC+=3;
                 break;
-			case 6://mov wr(reg[op2], reg[op1])
+            case 6://mov wr(reg[op2], reg[op1])
                 Write(GetReg(op2), GetReg(op1));
                 PC+=3;
                 break;
-			case 7://mov wr(rd(op2), reg[op1])
-			    Write(Read(op2), GetReg(op1));//write to a pointer
-				PC+=3;
-				break;
-			case 8://inc reg[op1] += 1
-			    SetReg(op1, GetReg(op1)+1);
-			    PC+=2;
-				break;
-			case 9://dec reg[op1] -= 1
-			    SetReg(op1, GetReg(op1)-1);
-			    PC+=2;
-				break;
-			case 10://add reg[op1] = reg[op1] + reg[op2]
-			    SetReg(op1, GetReg(op1) + GetReg(op2));
-			    PC+=3;
-				break;
-			case 11://add reg[op1] = reg[op1] + rd(op2)
-			    SetReg(op1, GetReg(op1) + Read(op2));
-			    PC+=3;
-				break;
-			case 12://add reg[op1] = reg[op1] + rd(reg[op2])
-			    SetReg(op1, GetReg(op1) + Read(GetReg(op2)));
-			    PC+=3;
-				break;
-			case 13://sub reg[op1] = reg[op1] - reg[op2]
-			    SetReg(op1, GetReg(op1) - GetReg(op2));
-			    PC+=3;
-				break;
-			case 14://sub reg[op1] = reg[op1] - rd(op2)
-			    SetReg(op1, GetReg(op1) + Read(op2));
-			    PC+=3;
-				break;
-			case 15://sub reg[op1] = reg[op1] - rd(reg[op2])
-			    SetReg(op1, GetReg(op1) - Read(GetReg(op2)));
-			    PC+=3;
-				break;
-			case 16://mul reg[op1] = reg[op1] * reg[op2]
-			    SetReg(op1, GetReg(op1) * GetReg(op2));
-			    PC+=3;
-				break;
-			case 17://mul reg[op1] = reg[op1] * rd(op2)
-			    SetReg(op1, GetReg(op1) * Read(op2));
-			    PC+=3;
-				break;
-			case 18://div reg[op1] = reg[op1] / reg[op2]
-		        SetReg(op1, GetReg(op1) / GetReg(op2));
-			    PC+=3;
-				break;
-			case 19://div reg[op1] = reg[op1] / rd(op2)
-			    SetReg(op1, GetReg(op1) / Read(op2));
-			    PC+=3;
-				break;
-			case 20://jmp op1			    
-			    PC=op1;
-				break;
+            case 7://mov wr(rd(op2), reg[op1])
+                Write(Read(op2), GetReg(op1));//write to a pointer
+                PC+=3;
+                break;
+            case 8://inc reg[op1] += 1
+                SetReg(op1, ParseFlags(GetReg(op1)+1));
+                PC+=2;
+                break;
+            case 9://dec reg[op1] -= 1
+                SetReg(op1, ParseFlags(GetReg(op1)-1));
+                PC+=2;
+                break;
+            case 10://add reg[op1] = reg[op1] + reg[op2]
+                SetReg(op1, ParseFlags(GetReg(op1) + GetReg(op2)));
+                PC+=3;
+                break;
+            case 11://add reg[op1] = reg[op1] + rd(op2)
+                SetReg(op1, ParseFlags(GetReg(op1) + Read(op2)));
+                PC+=3;
+                break;
+            case 12://add reg[op1] = reg[op1] + rd(reg[op2])
+                SetReg(op1, ParseFlags(GetReg(op1) + Read(GetReg(op2))));
+                PC+=3;
+                break;
+            case 13://sub reg[op1] = reg[op1] - reg[op2]
+                SetReg(op1, ParseFlags(GetReg(op1) - GetReg(op2)));
+                PC+=3;
+                break;
+            case 14://sub reg[op1] = reg[op1] - rd(op2)
+                SetReg(op1, ParseFlags(GetReg(op1) + Read(op2)));
+                PC+=3;
+                break;
+            case 15://sub reg[op1] = reg[op1] - rd(reg[op2])
+                SetReg(op1, ParseFlags(GetReg(op1) - Read(GetReg(op2))));
+                PC+=3;
+                break;
+            case 16://mul reg[op1] = reg[op1] * reg[op2]
+                SetReg(op1, ParseFlags(GetReg(op1) * GetReg(op2)));
+                PC+=3;
+                break;
+            case 17://mul reg[op1] = reg[op1] * rd(op2)
+                SetReg(op1, ParseFlags(GetReg(op1) * Read(op2)));
+                PC+=3;
+                break;
+            case 18://div reg[op1] = reg[op1] / reg[op2]
+                SetReg(op1, ParseFlags(GetReg(op1) / GetReg(op2)));
+                PC+=3;
+                break;
+            case 19://div reg[op1] = reg[op1] / rd(op2)
+                SetReg(op1, ParseFlags(GetReg(op1) / Read(op2)));
+                PC+=3;
+                break;
+            case 20://jmp op1
+                PC=op1;
+                break;
             default:
                 PC+=1;
         }
@@ -195,18 +207,19 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         std::cout << "\nusp:" << SP[0];
         std::cout << "\nksp:" << SP[1];
         std::cout << "\nA:" << Regs[0];
-		std::cout << "\nB:" << Regs[1];
-		std::cout << "\nC:" << Regs[2];
-		std::cout << "\nD:" << Regs[3];
+        std::cout << "\nB:" << Regs[1];
+        std::cout << "\nC:" << Regs[2];
+        std::cout << "\nD:" << Regs[3];
     }
 };
 
 int main() {
     CPU cpu;
-	Word testprogram[] = {0, 0, 1, 0, 1, 4, 10, 0, 1};
+    Word testprogram[] = {0, 0, 1, 0, 1, 4, 10, 0, 1};
     cpu.Initialize();//initialize the computer
     cpu.Reset();//reset the cpu
-	cpu.memory.Load(testprogram, sizeof(testprogram)/2, 0x00FF);
+    cpu.memory.Load(testprogram, sizeof(testprogram)/2, 0x00FF);
+    cpu.Execute();
     cpu.Execute();
     cpu.Execute();
     cpu.Status();//show cpu status
