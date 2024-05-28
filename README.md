@@ -7,6 +7,7 @@ adres bus & data bus are 16 bit.
 it also has an mmu and interupts.
 
 TODO:
+
 add instructions.
 
 add interupts and mmu interupts.
@@ -15,7 +16,7 @@ add stack functions (push, pop).
 
 add some form of simulated hard storage using binairy files, disk images or floppy disks. - Done
 
-add IO (keyboard, TTY, networking, vga graphics).
+add IO (keyboard - done, TTY - done, networking, vga graphics).
 
 Curently being worked on:
 instructions and interputs
@@ -23,3 +24,12 @@ instructions and interputs
 BUGS:
 random segfault that is caused by non deterministic source in EXECUTE function. - fixed
 
+how to build:
+first download the repo and navigate to the root.
+in the root of the project use the make command.
+then use ./main to run the simulation
+
+notes:
+
+Flash.bin holds the hard storage and is loaded into Flash memory at initialization.
+Bios.bin holds the bios wich is loaded to 0x00FF at cpu initialization.
