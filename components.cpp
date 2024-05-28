@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <conio.h>
 
 #define W_SIZE 65536
 
@@ -47,6 +48,7 @@ struct MEM { //this holds the ram memory
 
 struct FLASH {
     Byte Flash[1024];
+    Word AdresRegister;
     void LoadFlash() {
         std::ifstream infile("Flash.bin");
         infile.seekg(0, std::ios::end);
@@ -69,16 +71,30 @@ struct FLASH {
         std::ofstream outfile("Flash.bin", std::ios::binary);
         outfile.write((char *) Flash, sizeof(Flash));
     }
-    Word Read(Word adres) {
-        if (adres > sizeof(Flash)) {//check for adres larger then the size of Flash
+    Word Read() {
+        if (AdresRegister > sizeof(Flash)) {//check for adres larger then the size of Flash
             return 0;
         }
-        return (Word) Flash[adres];
+        return (Word) Flash[AdresRegister];
     }
-    void Write(Word adres, Byte value) {
-        if (adres > sizeof(Flash)) {
+    void Write(Byte value) {
+        if (AdresRegister > sizeof(Flash)) {
             return;
         }
-        Flash[adres] = value;
+        Flash[AdresRegister] = value;
+    }
+};
+
+struct SERIALIO {
+    Byte InputRegister;
+    Byte StatusRegister;
+    void Write(Byte charcode) {
+        std::cout << (char) charcode;
+    }
+    void Update() {
+        if (kbhit()) {
+            InputRegister = getch();
+            StatusRegister = 1;
+        }
     }
 };

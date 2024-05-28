@@ -4,6 +4,7 @@
 struct CPU {//contains the cpu registers and functions to execute code from the memory
     MEM memory;
     FLASH flashmem;//flash memory contains bootloader and os
+    SERIALIO serialio;//io
     Word PC; //Program Counter contains the current adres in memory where the cpu is executing
     Word SP[2]; //stack pointers KSP and USP
     Word Regs[4]; //user registers A, B, C and D
@@ -71,10 +72,16 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
             switch(adres) {
                 case 0:
                     return MMUOffset;
-                    break;
                 case 1:
                     return MMUMax;
-                    break;
+                case 10:
+                    return flashmem.AdresRegister;
+                case 11:
+                    return flashmem.Read();
+                case 20://read the io status register
+                    return serialio.StatusRegister;
+                case 21://read the io input register
+                    return serialio.InputRegister;
                 default:
                     return 0;
             }
@@ -89,6 +96,18 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                     break;
                 case 1:
                     MMUMax = data;
+                    break;
+                case 10://flash adres register
+                    flashmem.AdresRegister = data;
+                    break;
+                case 11://flash data register
+                    flashmem.Write(data);
+                    break;
+                case 20://write to the status register
+                    serialio.StatusRegister = (Byte) data;
+                    break;
+                case 22://write to the output register and send 1 byte
+                    serialio.Write((Byte) data);
                     break;
                 default:
                     return;
@@ -114,7 +133,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         Word IR = Read(PC);//IR = Instruction Register it holds the curretn instruction
         Word op1 = Read(PC+1);
         Word op2 = Read(PC+2);
-        switch(IR) {
+        switch(IR) {//lookup what instruction has to be executed
             case 0://mov reg[op1] = op2
                 SetReg(op1, op2);
                 PC+=3;
@@ -195,8 +214,43 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                 SetReg(op1, ParseFlags(GetReg(op1) / Read(op2)));
                 PC+=3;
                 break;
-            case 20://jmp op1
-                PC=op1;
+            case 20://and reg[op1] = reg[op1] & reg[op2]
+                SetReg(op1, ParseFlags(GetReg(op1) & GetReg(op2));
+                PC+=3;
+                break;
+            case 21://or reg[op1] = reg[op1] | reg[op2]
+                SetReg(op1, ParseFlags(GetReg(op1) | GetReg(op2)));
+                PC+=3;
+                break;
+            case 22://xor reg[op1] = reg[op1] ^ reg[op2]
+                SetReg(op1, ParseFlags(GetReg(op1) ^ GetReg(op2)));
+                PC+=3;
+                break;
+            case 23://shl reg[op1] = reg[op1] << reg[op2]
+                SetReg(op1, ParseFlags(GetReg(op1) << GetReg(op2)));
+                PC+=3;
+                break;
+            case 24://shr reg[op1] = reg[op1] >> reg[op2]
+                SetReg(op1, ParseFlags(GetReg(op1) >> GetReg(op2)));
+                PC+=3;
+                break;
+            case 25://not reg[op1] = ~reg[op1]
+                SetReg(op1, ParseFlags(~GetReg(op1)));
+                PC+=2;
+                break;
+            case 26://jmp op1
+                PC = op1;
+                break;
+            case 27://jmp reg[op1]
+                PC = GetReg(op1);
+                break;
+            case 28://jz op1
+                if (GetFlag(2)) {
+                    ClearFlag(2);
+                    PC = op1;
+                } else {
+                    PC += 2;
+                }
                 break;
             default:
                 PC+=1;
@@ -215,14 +269,16 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
 
 int main() {
     CPU cpu;
-    Word testprogram[] = {0, 0, 1, 0, 1, 4, 10, 0, 1};
+    Word testprogram[] = {0, 0, 1, 0, 1, 4, 10, 0, 1, 20, 257};
     cpu.Initialize();//initialize the computer
     cpu.Reset();//reset the cpu
     cpu.memory.Load(testprogram, sizeof(testprogram)/2, 0x00FF);
-    cpu.Execute();
-    cpu.Execute();
-    cpu.Execute();
-    cpu.Status();//show cpu status
+    while(cpu.PC < 266) {
+        cpu.serialio.Update();
+        cpu.Execute();
+        //cpu.Status();
+    }
+    cpu.Status();
     std::cout << "\nramdump:\n";
     cpu.memory.Dump(255, 266);//dump 11 bytes of ram from location 0xff
     std::cout << "\nflashdump:\n";
