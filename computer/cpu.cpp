@@ -238,13 +238,23 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                 SetReg(op1, ParseFlags(~GetReg(op1)));
                 PC+=2;
                 break;
-            case 26://jmp op1
+            case 26://cmp reg[op1] == reg[op2]
+                ParseFlags(GetReg(op1) - GetReg(op2));
+                PC+=3;
+                break;
+            case 27://clf clear flags
+                ClearFlag(0);
+                ClearFlag(1);
+                ClearFlag(2);
+                PC+=1;
+                break;
+            case 28://jmp op1
                 PC = op1;
                 break;
-            case 27://jmp reg[op1]
+            case 29://jmp reg[op1]
                 PC = GetReg(op1);
                 break;
-            case 28://jz op1
+            case 30://jz op1
                 if (GetFlag(2)) {
                     ClearFlag(2);
                     PC = op1;
@@ -252,8 +262,33 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                     PC += 2;
                 }
                 break;
+            case 31://jz reg[op1]
+                if (GetFlag(2)) {
+                    ClearFlag(2);
+                    PC = GetReg(op1);
+                } else {
+                    PC += 2;
+                }
+                break;
+            case 32://jnz op1
+                if (GetFlag(2)==0) {
+                    ClearFlag(2);
+                    PC = op1;
+                } else {
+                    PC += 2;
+                }
+                break;
+            case 33://jnz reg[op1]
+                if (GetFlag(2)==0) {
+                    ClearFlag(2);
+                    PC = GetReg(op1);
+                } else {
+                    PC += 2;
+                }
+                break;
             case 255://hlt
                 SetFlag(5);//set the halt flag
+                break;
             default:
                 PC+=1;
         }
@@ -266,5 +301,13 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         std::cout << "\nB:" << Regs[1];
         std::cout << "\nC:" << Regs[2];
         std::cout << "\nD:" << Regs[3];
+    }
+    void ShowFlags() {
+        std::cout << "\nfl0:" << GetFlag(0);
+        std::cout << "\nfl1:" << GetFlag(1);
+        std::cout << "\nfl2:" << GetFlag(2);
+        std::cout << "\nfl3:" << GetFlag(3);
+        std::cout << "\nfl4:" << GetFlag(4);
+        std::cout << "\nfl5:" << GetFlag(5);
     }
 };
