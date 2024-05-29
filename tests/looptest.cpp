@@ -2,7 +2,7 @@
 
 int main() {
     CPU cpu;
-    Word program[] = {
+    Word program[] = {//loop 10000 times
         0, 0, 0, //      mov a, 0
         0, 1, 10000,//loop: mov b, 10
         8, 0,    //      inc a

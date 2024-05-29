@@ -18,11 +18,14 @@ add some form of simulated non volatile memory using binairy files, disk images 
 
 add IO (keyboard - done, TTY - done, networking, vga graphics).
 
+rework makefile and cleen it up.
+
 Curently being worked on:
 instructions and interupts
 
 BUGS:
 random segfault due to non deterministic source in EXECUTE function. - fixed
+hlt, jz, jnz instructions not working - fixed
 
 how to build:
 first download the repo and navigate to the root.

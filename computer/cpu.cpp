@@ -286,6 +286,10 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                     PC += 2;
                 }
                 break;
+            case 40://temporary io instruction
+                WriteIO(op1, GetReg(op2));
+                PC+=3;
+                break;
             case 255://hlt
                 SetFlag(5);//set the halt flag
                 break;
