@@ -68,7 +68,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         }
     }
     Word ReadIO(Byte adres) {//read a word from the IO bus
-        if (~GetFlag(3)) {//check if the cpu is in kernel mode i.e when the usermode flag is set to 0
+        if (GetFlag(3)==0) {//check if the cpu is in kernel mode i.e when the usermode flag is set to 0
             switch(adres) {
                 case 0:
                     return MMUOffset;
@@ -89,7 +89,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         return 0;
     }
     void WriteIO(Byte adres, Word data) {//write a word to the IO bus
-        if (~GetFlag(3)) {//check if the cpu is in kernel mode
+        if (GetFlag(3)==0) {//check if the cpu is in kernel mode
             switch(adres) {
                 case 0:
                     MMUOffset = data;
@@ -113,6 +113,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                     return;
             }
         }
+        return;
     }
     void Initialize() {//initializes all the arrays
         memory.Initialize();
@@ -286,8 +287,8 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                     PC += 2;
                 }
                 break;
-            case 40://temporary io instruction
-                WriteIO(op1, GetReg(op2));
+            case 34://temporary io instruction
+                std::cout << "\nyeet1";
                 PC+=3;
                 break;
             case 255://hlt

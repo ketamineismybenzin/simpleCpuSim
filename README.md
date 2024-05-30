@@ -25,7 +25,8 @@ instructions and interupts
 
 BUGS:
 random segfault due to non deterministic source in EXECUTE function. - fixed
-hlt, jz, jnz instructions not working - fixed
+hlt, jz, jnz instructions not working. - fixed
+test io instruction 34 somehow resets the registers without having any code except an std::cout expresion. might be a pointer bug or some weird edge case like that.
 
 how to build:
 first download the repo and navigate to the root.

@@ -3,8 +3,8 @@
 int main() {
     Word program[] = {
         0, 0, 0x6565, //mov a, 0x65
-        40, 22, 0,  //out $22, a
-        255         //hlt
+        27,     //out $22, a
+        255           //hlt
     };
     CPU cpu;
     cpu.Initialize();
