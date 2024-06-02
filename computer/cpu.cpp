@@ -27,7 +27,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         return 0;
     }
     void SetReg(Word reg, Word value) {
-        if ((2*reg < sizeof(Regs)) & ~GetFlag(4)) {
+        if ((2*reg < sizeof(Regs)) && !GetFlag(4)) {
             Regs[reg] = value;
         }
     }
@@ -38,7 +38,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         if (input>=127) {
             SetFlag(1);
         }
-        if (input>0 & input < 127) {
+        if (input>0 && input < 127) {
             SetFlag(0);
         }
         return input;
@@ -68,7 +68,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         }
     }
     Word ReadIO(Byte adres) {//read a word from the IO bus
-        if (GetFlag(3)==0) {//check if the cpu is in kernel mode i.e when the usermode flag is set to 0
+        if (!GetFlag(3)) {//check if the cpu is in kernel mode i.e when the usermode flag is set to 0
             switch(adres) {
                 case 0:
                     return MMUOffset;
@@ -89,7 +89,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         return 0;
     }
     void WriteIO(Byte adres, Word data) {//write a word to the IO bus
-        if (GetFlag(3)==0) {//check if the cpu is in kernel mode
+        if (!GetFlag(3)) {//check if the cpu is in kernel mode
             switch(adres) {
                 case 0:
                     MMUOffset = data;
@@ -128,6 +128,9 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         Regs[1] = 0;
         Regs[2] = 0;
         Regs[3] = 0;
+		Flags = 0;
+		MMUMax = 0;
+		MMUOffset = 0;
     }
     void Execute() {//execute single instruction
         Word val;//val is used as temporary storage of data
@@ -272,7 +275,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                 }
                 break;
             case 32://jnz op1
-                if (GetFlag(2)==0) {
+                if (!GetFlag(2)) {
                     ClearFlag(2);
                     PC = op1;
                 } else {
@@ -280,7 +283,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                 }
                 break;
             case 33://jnz reg[op1]
-                if (GetFlag(2)==0) {
+                if (!GetFlag(2)) {
                     ClearFlag(2);
                     PC = GetReg(op1);
                 } else {
@@ -288,7 +291,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                 }
                 break;
             case 34://temporary io instruction
-                std::cout << "\nyeet1";
+			    WriteIO((Byte) op1, GetReg(op2));
                 PC+=3;
                 break;
             case 255://hlt

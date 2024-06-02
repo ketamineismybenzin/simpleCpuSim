@@ -4,7 +4,7 @@ int main() {
     CPU cpu;
     cpu.Initialize();
     cpu.Reset();
-    while(~cpu.GetFlag(5)) {
+    while(!cpu.GetFlag(5)) {
         cpu.serialio.Update();//check if the user has presed a key
         cpu.Execute();//execute a instruction
     }

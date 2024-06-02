@@ -24,7 +24,7 @@ Curently being worked on:
 instructions and interupts
 
 BUGS:
-random segfault due to non deterministic source in EXECUTE function. - fixed
+random segfault due to non deterministic source in EXECUTE function. - fixed - nvm it is back but now im even more clueless. - nvm fixed it again ;(
 hlt, jz, jnz instructions not working. - fixed
 test io instruction 34 somehow resets the registers without having any code except an std::cout expresion. might be a pointer bug or some weird edge case like that.
 
