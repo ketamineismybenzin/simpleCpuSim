@@ -14,7 +14,7 @@ int main() {
         cpu.serialio.Update();
         cpu.Execute();
     }
-    std::cout << "execution ended";
+    std::cout << "\nexecution ended\n";
     cpu.memory.Dump(255,265);
     cpu.Status();
     cpu.ShowFlags();
