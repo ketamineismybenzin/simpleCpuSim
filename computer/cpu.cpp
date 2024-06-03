@@ -401,7 +401,14 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
 			    PC = Pop();
 				SetFlag(3);
 				break;
-				
+			case 51://out wrio(op1, reg[op2])
+			    WriteIO((Byte) op1, GetReg(op2));
+				PC += 3;
+				break;
+			case 52://in reg[op2] = rdio(op1)
+			    SetReg(op2, ReadIO((Byte) op1));
+				PC += 3;
+				break;
             case 255://hlt
                 SetFlag(5);//set the halt flag
                 break;
