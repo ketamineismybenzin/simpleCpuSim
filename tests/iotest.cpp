@@ -2,9 +2,11 @@
 
 int main() {
     Word program[] = {
-        0, 0, 0x66, //mov a, 0x65
-        34, 22, 0,     //out $22, a
-        255           //hlt
+        0, 0, 0x66, //mov a, 0x66
+        34, 22, 0,  //out $22, a
+        0, 0, 0x67, //mov a, 0x67
+        34, 22, 0,  //out $22, a
+        255         //hlt
     };
     CPU cpu;
     cpu.Initialize();

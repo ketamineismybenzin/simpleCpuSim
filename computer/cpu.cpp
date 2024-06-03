@@ -2,7 +2,12 @@
 #include "components.cpp"
 
 struct CPU {//contains the cpu registers and functions to execute code from the memory
-    MEM memory;
+    MEM memory;/*0x0000 - 0x00FF is the isr vector table
+	0x00 = reset vector
+    0x01 = divide by 0
+	0x05 = MMU segfault
+	0x0
+	*/
     FLASH flashmem;//flash memory contains bootloader and os
     SERIALIO serialio;//io
     Word PC; //Program Counter contains the current adres in memory where the cpu is executing
@@ -47,7 +52,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         if (GetFlag(3)) {//check if the mmu is active
             Word hardadres = adres + MMUOffset;
             if (adres > MMUMax) {//if the adres is too high we segfault
-                //mmu segfault interupt
+                Int(5);//mmu segfault
                 return 0;
             }
             return memory.Ram[hardadres];
@@ -59,7 +64,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         if (GetFlag(3)) {//check if the mmu is active i.e when the usermode flag is set to 1
             Word hardadres = adres + MMUOffset;
             if (adres > MMUMax) {//if the adres is too high we segfault
-                //mmu segfault interupt
+                Int(5);//mmu segfault interupt
                 return;
             }
             memory.Ram[hardadres] = data;
@@ -115,6 +120,20 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         }
         return;
     }
+	void Push(Word value) {//pushes a value to the stack
+		Write(SP[GetFlag(3)], value);//write the value to memory with the sp as the adres
+		SP[GetFlag(3)] += 1; //increment the sp by 1
+	}
+	Word Pop() {//pop's a value from the stack
+		SP[GetFlag(3)] -= 1;//do the exact same proces in Push() but in reverse
+		return Read(SP[GetFlag(3)]);
+	}
+	void Int(Byte vector) {
+		SetFlag(4);//set the interupt flag
+		ClearFlag(3);//go to kernel mode
+		Push(PC);
+		PC = Read((Word) vector);
+	}
     void Initialize() {//initializes all the arrays
         memory.Initialize();
         memory.LoadBIOS();
@@ -276,7 +295,6 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                 break;
             case 32://jnz op1
                 if (!GetFlag(2)) {
-                    ClearFlag(2);
                     PC = op1;
                 } else {
                     PC += 2;
@@ -284,22 +302,113 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                 break;
             case 33://jnz reg[op1]
                 if (!GetFlag(2)) {
-                    ClearFlag(2);
                     PC = GetReg(op1);
                 } else {
                     PC += 2;
                 }
                 break;
-            case 34://temporary io instruction
-			    WriteIO((Byte) op1, GetReg(op2));
-                PC+=3;
+            case 34://jn op1
+			    if (GetFlag(1)) {
+					ClearFlag(1);
+					PC = op1;
+			    } else {
+					PC += 2;
+				}
                 break;
+			case 35://jn reg[op1]
+			    if (GetFlag(1)) {
+					ClearFlag(1);
+					PC = GetReg(op1);
+			    } else {
+					PC += 2;
+				}
+                break;
+			case 36://jnn op1
+			    if (!GetFlag(1)) {
+					PC = op1;
+			    } else {
+					PC += 2;
+				}
+                break;
+			case 37://jnn reg[op1]
+			    if (!GetFlag(1)) {
+					PC = GetReg(op1);
+			    } else {
+					PC += 2;
+				}
+                break;
+			case 38://jp op1
+			    if (GetFlag(0)) {
+					ClearFlag(0);
+					PC = op1;
+			    } else {
+					PC += 2;
+				}
+                break;
+			case 39://jp reg[op1]
+			    if (GetFlag(0)) {
+					ClearFlag(0);
+					PC = GetReg(op1);
+			    } else {
+					PC += 2;
+				}
+                break;
+			case 40://jnp op1
+			    if (GetFlag(0)) {
+					PC = op1;
+			    } else {
+					PC += 2;
+				}
+                break;
+			case 41://jnp reg[op1]
+			    if (GetFlag(0)) {
+					PC = GetReg(op1);
+			    } else {
+					PC += 2;
+				}
+                break;
+			case 42://call op1
+			    Push(PC);//push pc to the stack
+			    PC = op1;
+				break;
+			case 43://call reg[op1];
+			    Push(PC);//push pc to the stack
+				PC = GetReg(op1);//set pc to reg[op1]
+				break;
+			case 44://ret
+			    PC = Pop();
+				break;
+			case 45://push reg[op1]
+			    Push(GetReg(op1));
+				PC += 2;
+				break;
+			case 46://push op1;
+			    Push(op1);
+				PC += 2;
+				break;
+			case 47://pop reg[op1]
+			    SetReg(op1, Pop());
+				PC += 2;
+				break;
+			case 48://pop wr(op1, pop())
+			    Write(op1, Pop());
+				PC += 2;
+				break;
+			case 49://int op1
+			    Int(op1);
+				break;
+			case 50://iret
+			    PC = Pop();
+				SetFlag(3);
+				break;
+				
             case 255://hlt
                 SetFlag(5);//set the halt flag
                 break;
             default:
                 PC+=1;
         }
+		ClearFlag(4);//reset interupt flag
     }
     void Status() {
         std::cout << "\npc:" << PC;
