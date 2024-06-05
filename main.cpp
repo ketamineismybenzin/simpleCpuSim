@@ -1,6 +1,6 @@
 #include "computer/cpu.cpp"
 
-int main() {
+int main(int argc, char *argv[]) {
     CPU cpu;//create cpu object and initialize it
     cpu.Initialize();
     cpu.Reset();//reset the cpu

@@ -9,11 +9,6 @@ using Byte = unsigned char;
 using Word = unsigned short;
 using u32 = unsigned int;
 
-union WordBuffer {
-    Byte Bytes[1024];
-    Word Words[512];
-};
-
 struct MEM { //this holds the ram memory
     Word Ram[W_SIZE];
     void Initialize() {//initializes array with 0's
@@ -28,16 +23,14 @@ struct MEM { //this holds the ram memory
         }
     }
     void LoadBIOS() {//load the Bios.bin file into ram
-        WordBuffer filebuffer;
-        std::ifstream infile("Bios.bin");
-        infile.seekg(0, std::ios::end);
-        size_t length = infile.tellg();
-        infile.seekg(0, std::ios::beg);
-        if (length > sizeof(filebuffer.Bytes)) {
-            length = sizeof(filebuffer.Bytes);
-        }
-        infile.read((char *) filebuffer.Bytes, length);
-        Load(filebuffer.Words, sizeof(filebuffer.Words)/2, 0x00FF);//we need to divide sizeof by 2 because 1 word is 2 bytes
+	    Word bios[256];//buffer for the bios
+		std::ifstream input("Bios.bin", std::ios::binary);
+		if (!input) {//check if the file is opened
+			std::cerr << "Error: Could not open \"Bios.bin\"\n";
+		}
+		input.unsetf(std::ios::skipws);//read 512 bytes into the ram memory
+		input.read(reinterpret_cast<char*>(bios), 512);
+		Load(bios, 256, 0x00FF);//load the bios into ram at adres 0x00FF where the reset vector points
     }
     void Dump(u32 start, u32 end) {//show a portion of the ram
         for (u32 i = start; i<end; i++) {
@@ -86,7 +79,7 @@ struct FLASH {
 };
 
 struct SERIALIO {
-    Byte InputRegister;
+    Byte InputRegister;//holds the last typed char
     Byte StatusRegister;
     void Write(Byte charcode) {
         std::cout << (char) charcode;
