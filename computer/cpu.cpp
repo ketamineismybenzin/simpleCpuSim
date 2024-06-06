@@ -191,11 +191,11 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
                 PC+=3;
                 break;
             case 8://inc reg[op1] += 1
-                SetReg(op1, ParseFlags(GetReg(op1)+1));
+                SetReg(op1, GetReg(op1)+1);
                 PC+=2;
                 break;
             case 9://dec reg[op1] -= 1
-                SetReg(op1, ParseFlags(GetReg(op1)-1));
+                SetReg(op1, GetReg(op1)-1);
                 PC+=2;
                 break;
             case 10://add reg[op1] = reg[op1] + reg[op2]
@@ -409,6 +409,10 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
 			case 52://in reg[op2] = rdio(op1)
 			    SetReg(op2, ReadIO((Byte) op1));
 				PC += 3;
+				break;
+			case 53://gfl reg[op1]
+			    ParseFlags(GetReg(op1));
+				PC += 2;
 				break;
             case 255://hlt
                 SetFlag(5);//set the halt flag

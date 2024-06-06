@@ -11,7 +11,7 @@ int main() {
     CPU cpu;
     cpu.Initialize();
     cpu.Reset();
-    cpu.memory.Dump(255, 280);
+    //cpu.memory.Dump(255, 280);
     //cpu.memory.Load(program, sizeof(program)/2, 0x00FF);//load test program
     while(!cpu.GetFlag(5)) {
         cpu.serialio.Update();
