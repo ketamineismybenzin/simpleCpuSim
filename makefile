@@ -26,12 +26,12 @@ iotest.o: tests/iotest.cpp
 
 objects/cpu.o: computer/cpu.cpp
 	g++ -c computer/cpu.cpp
-	rm objects/cpu.o
+	rm -f objects/cpu.o
 	mv cpu.o objects/cpu.o
 
 objects/components.o: computer/components.cpp
 	g++ -c computer/components.cpp
-	rm objects/components.o
+	rm -f objects/components.o
 	mv components.o objects/components.o
 
 clean:
