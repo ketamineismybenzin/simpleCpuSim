@@ -156,6 +156,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         Word IR = Read(PC);//IR = Instruction Register it holds the curretn instruction
         Word op1 = Read(PC+1);
         Word op2 = Read(PC+2);
+		//std::cout << "\nIR:" << IR << "\nop1:" << op1 << "\nop2" << op2 << "\n";
         switch(IR) {//lookup what instruction has to be executed
             case 0://mov reg[op1] = op2
                 SetReg(op1, op2);
