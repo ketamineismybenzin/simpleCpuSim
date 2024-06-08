@@ -21,7 +21,7 @@ add IO (keyboard - done, TTY - done, networking, vga graphics).
 rework makefile and cleen it up.
 
 Curently being worked on:
-instructions and interupts
+nothing since i have shifted focus on development of a c compiler for my custom isa
 
 BUGS:
 random segfault due to non deterministic source in EXECUTE function. - fixed - nvm it is back but now im even more clueless. - nvm fixed it again.

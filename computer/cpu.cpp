@@ -6,7 +6,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
 	0x00 = reset vector
     0x01 = divide by 0
 	0x05 = MMU segfault
-	0x0
+	
 	*/
     FLASH flashmem;//flash memory contains bootloader and os
     SERIALIO serialio;//io
@@ -156,6 +156,7 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
         Word IR = Read(PC);//IR = Instruction Register it holds the curretn instruction
         Word op1 = Read(PC+1);
         Word op2 = Read(PC+2);
+		Word lastpc = PC;//stores pc
 		//std::cout << "\nIR:" << IR << "\nop1:" << op1 << "\nop2" << op2 << "\n";
         switch(IR) {//lookup what instruction has to be executed
             case 0://mov reg[op1] = op2
@@ -406,11 +407,19 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
 			    WriteIO((Byte) op1, GetReg(op2));
 				PC += 3;
 				break;
-			case 52://in reg[op2] = rdio(op1)
+			case 52://out wrio(op1, rd(reg[op2]))
+			    WriteIO((Byte) op1, Read(GetReg(op2)));
+				PC += 3;
+				break;
+			case 53://in reg[op2] = rdio(op1)
 			    SetReg(op2, ReadIO((Byte) op1));
 				PC += 3;
 				break;
-			case 53://gfl reg[op1]
+			case 54://in wr(reg[op2], rdio(op1))
+			    Write(GetReg(op2), ReadIO(op1));
+				PC += 3;
+				break;
+			case 55://gfl reg[op1]
 			    ParseFlags(GetReg(op1));
 				PC += 2;
 				break;
@@ -420,7 +429,10 @@ struct CPU {//contains the cpu registers and functions to execute code from the 
             default:
                 PC+=1;
         }
-		ClearFlag(4);//reset interupt flag
+		if (GetFlag(4)) {//check if the interupt flag is set
+			PC = lastpc;
+			ClearFlag(4);
+		}
     }
     void Status() {
         std::cout << "\npc:" << PC;
