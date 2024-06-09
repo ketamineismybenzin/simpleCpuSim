@@ -43,14 +43,12 @@ struct FLASH {
     Byte Flash[1024];
     Word AdresRegister;
     void LoadFlash() {
-        std::ifstream infile("Flash.bin");
-        infile.seekg(0, std::ios::end);
-        size_t length = infile.tellg();
-        infile.seekg(0, std::ios::beg);
-        if (length > sizeof(Flash)) {
-            length = sizeof(Flash);
-        }
-        infile.read((char *) Flash, length);
+        std::ifstream inputfile("Flash.bin", std::ios::binary);
+		if (!inputfile) {//check if the file is opened
+			std::cerr << "Error: Could not open \"Bios.bin\"\n";
+		}
+		inputfile.unsetf(std::ios::skipws);//read 512 bytes into the ram memory
+		inputfile.read((char*) Flash, 1024);
     }
     void Dump(u32 start, u32 end) {
         if ((start > sizeof(Flash)) | (end > sizeof(Flash))) {
@@ -78,7 +76,7 @@ struct FLASH {
     }
 };
 
-struct SERIALIO {
+struct SERIALIO {//TODO: add a delay depending on the baud rate set so the program has to wait before it can send another char
     Byte InputRegister;//holds the last typed char
     Byte StatusRegister;
     void Write(Byte charcode) {
